@@ -7,12 +7,12 @@ import java.util.*;
 
 public class Kmeans {
     List<Movie> movies = new ArrayList<>();
-    Map<Map<Double,List<Movie>>,List<Movie>> clustersOutliers = new HashMap<>();
+    Map.Entry<Map<Double, List<Movie>>, List<Movie>> clustersOutliers = new AbstractMap.SimpleEntry<>(new HashMap<>(), new ArrayList<>());
     public List<Movie> getMovies() {
         return movies;
     }
 
-    public Map<Map<Double,List<Movie>>,List<Movie>> getClustersOutliers() {
+    public Map.Entry<Map<Double, List<Movie>>, List<Movie>> getClustersOutliers() {
         return clustersOutliers;
     }
 
@@ -192,27 +192,28 @@ public class Kmeans {
         }
 
         // Output clusters
-        System.out.println("Clusters:");
-        System.out.println("centroids: ");
-        for (Map.Entry<Double, List<Movie>> entry : clusters.entrySet()) {
-            System.out.print(" " + entry.getKey());
-        }
-        System.out.println();
-        for (Map.Entry<Double, List<Movie>> entry : clusters.entrySet()) {
-            System.out.println("Cluster with centroid: " + entry.getKey());
-            for (Movie movie : entry.getValue()) {
-                System.out.print(" - " + movie.getIMDB_Rating());
-            }
-            System.out.println();
-        }
+//        System.out.println("Clusters:");
+//        System.out.println("centroids: ");
+//        for (Map.Entry<Double, List<Movie>> entry : clusters.entrySet()) {
+//            System.out.print(" " + entry.getKey());
+//        }
+//        System.out.println();
+//        for (Map.Entry<Double, List<Movie>> entry : clusters.entrySet()) {
+//            System.out.println("Cluster with centroid: " + entry.getKey());
+//            for (Movie movie : entry.getValue()) {
+//                System.out.print(" - " + movie.getIMDB_Rating());
+//            }
+//            System.out.println();
+//        }
 
         // Output outliers
-        System.out.println("Outliers:");
-        for (Movie movie : outliers) {
-            System.out.println(movie.getMovie_Name() + " - " + movie.getIMDB_Rating());
-        }
+//        System.out.println("Outliers:");
+//        for (Movie movie : outliers) {
+//            System.out.println(movie.getMovie_Name() + " - " + movie.getIMDB_Rating());
+//        }
 
-        clustersOutliers = Map.of(clusters, outliers);
+        // Store the clusters and outliers in a map entry
+        clustersOutliers = new AbstractMap.SimpleEntry<>(clusters, outliers);
     }
 
     // main

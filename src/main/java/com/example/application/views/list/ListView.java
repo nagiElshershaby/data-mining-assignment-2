@@ -3,7 +3,10 @@ package com.example.application.views.list;
 import com.example.application.data.Movie;
 import com.example.application.services.Kmeans;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -41,7 +44,7 @@ public class ListView extends VerticalLayout {
         percentageField.setValue(100);
         clustersField.setValue(5);
         iterationsField.setValue(100);
-        outlierField.setValue(1.0);
+        outlierField.setValue(1.5);
 
         MultiFileMemoryBuffer buffer = new MultiFileMemoryBuffer();
         Upload upload = new Upload(buffer);
@@ -56,6 +59,7 @@ public class ListView extends VerticalLayout {
         });
 
         Button processButton = new Button("Process");
+        VerticalLayout gridsLayout = new VerticalLayout();
         processButton.addClickListener(event -> {
             // validate input
             if (percentageField.isEmpty() || clustersField.isEmpty() || iterationsField.isEmpty() || outlierField.isEmpty()) {
@@ -66,11 +70,52 @@ public class ListView extends VerticalLayout {
                 Notification.show("Please enter a valid percentage value");
                 return;
             }
+            // validate input file
+            if (kmeans.getMovies().isEmpty()) {
+                Notification.show("Please upload a file first");
+                return;
+            }
 
 
             Notification.show("Processing...");
             kmeans.K_means_algorithm(clustersField.getValue(), iterationsField.getValue(), outlierField.getValue());
             Notification.show("Processed!");
+
+
+            // Clear the layout before adding new grids
+            gridsLayout.removeAll();
+            remove(gridsLayout);
+//            gridsLayout.setSpacing(true);
+            // Create a grid to display clusters
+            Map<Double, List<Movie>> clusters = kmeans.getClustersOutliers().getKey();
+            for (Map.Entry<Double, List<Movie>> clusterEntry : clusters.entrySet()) {
+                Grid<Movie> clusterGrid = new Grid<>(Movie.class);
+//                clusterGrid.setColumns("movie_Name", "IMDB_Rating","Release_Year", "Duration", "Metascore", "Votes", "Genre", "Director", "Cast", "Gross");
+
+                // Set items for the grid
+                clusterGrid.setItems(clusterEntry.getValue());
+
+                H3 clusterTitle = new H3("Cluster with centroid: " + clusterEntry.getKey());
+//                clusterTitle.getStyle().set("margin-top", "30px");
+                // Add the grid to the layout
+                gridsLayout.add(clusterTitle,clusterGrid);
+            }
+
+            // Create a grid to display outliers
+            Grid<Movie> outlierGrid = new Grid<>(Movie.class);
+//            outlierGrid.setColumns("movie_Name", "IMDB_Rating","Release_Year", "Duration", "Metascore", "Votes", "Genre", "Director", "Cast", "Gross");
+
+            // Get outliers from the result map
+            List<Movie> outliers = kmeans.getClustersOutliers().getValue();
+            // Add outliers to the grid
+            outlierGrid.setItems(outliers);
+
+            H3 outliersTitle = new H3("Outliers");
+            outliersTitle.getStyle().set("margin-top", "20px");
+            // Add the outliers grid to the layout
+            gridsLayout.add(outliersTitle,outlierGrid);
+
+            add(gridsLayout);
         });
 
         HorizontalLayout NumericInput = new HorizontalLayout();
@@ -81,6 +126,11 @@ public class ListView extends VerticalLayout {
         Buttons.setAlignItems(Alignment.BASELINE);
 
         add(NumericInput, Buttons);
+
+
+
+
+
     }
 
 }
