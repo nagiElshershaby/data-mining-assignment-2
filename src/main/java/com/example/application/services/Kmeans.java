@@ -2,17 +2,21 @@ package com.example.application.services;
 
 import com.example.application.data.Movie;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 public class Kmeans {
     List<Movie> movies = new ArrayList<>();
+    Map<Map<Double,List<Movie>>,List<Movie>> clustersOutliers = new HashMap<>();
     public List<Movie> getMovies() {
         return movies;
     }
-    public void readMoviesFromFile(String filename, double percentage) {
+
+    public Map<Map<Double,List<Movie>>,List<Movie>> getClustersOutliers() {
+        return clustersOutliers;
+    }
+
+    public void readMoviesFromFileWithFileName(String filename, double percentage) {
         if(percentage > 100 || percentage < 0)
             percentage = 0;
         movies.clear();
@@ -55,8 +59,54 @@ public class Kmeans {
             e.printStackTrace();
         }
     }
+    public void readMoviesFromFile(InputStream file, double percentage) {
+        if(percentage > 100 || percentage < 0)
+            percentage = 0;
+        movies.clear();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(file))) {
+            String line;
+            boolean firstLine = true;
+            List<String> lines = new ArrayList<>();
+            while ((line = br.readLine()) != null) {
+                if(firstLine){
+                    firstLine = false;
+                    continue;
+                }
+                lines.add(line);
+            }
+            // Calculate the number of records to read based on the specified percentage
+            int numRecords = (int) Math.ceil(lines.size() * percentage / 100.0);
+            Random rand = new Random();
+            Set<Integer> indices = new HashSet<>();
+            while (indices.size() < numRecords) {
+                indices.add(rand.nextInt(lines.size()));
+            }
 
-    public Map<Map<Double,List<Movie>>,List<Movie>> K_means_algorithm(int k, int maxIterations, double outlier_threshold) {
+            for (int index : indices) {
+                // Split the line by commas, and each part is a field in the record in a ""
+                String[] parts = lines.get(index).split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+                String Movie_Name = parts[0].trim();
+                String Release_Year = parts[1].trim();
+                String Duration = parts[2].trim();
+                double IMDB_Rating = Double.parseDouble(parts[3].trim());
+                String Metascore = parts[4].trim();
+                String Votes = parts[5].trim();
+                String Genre = parts[6].trim();
+                String Director = parts[7].trim();
+                String Cast = parts[8].trim();
+                String Gross = parts[9].trim();
+
+                // Create a Movie object or process the data as needed
+                Movie movie = new Movie(Movie_Name, Release_Year, Duration, IMDB_Rating,
+                        Metascore, Votes, Genre, Director, Cast, Gross);
+                movies.add(movie);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void K_means_algorithm(int k, int maxIterations, double outlier_threshold) {
 
         // Initialize centroids randomly
         List<Double> centroids = new ArrayList<>();
@@ -142,27 +192,27 @@ public class Kmeans {
         }
 
         // Output clusters
-//        System.out.println("Clusters:");
-//        System.out.println("centroids: ");
-//        for (Map.Entry<Double, List<Movie>> entry : clusters.entrySet()) {
-//            System.out.print(" " + entry.getKey());
-//        }
-//        System.out.println();
-//        for (Map.Entry<Double, List<Movie>> entry : clusters.entrySet()) {
-//            System.out.println("Cluster with centroid: " + entry.getKey());
-//            for (Movie movie : entry.getValue()) {
-//                System.out.print(" - " + movie.getIMDB_Rating());
-//            }
-//            System.out.println();
-//        }
+        System.out.println("Clusters:");
+        System.out.println("centroids: ");
+        for (Map.Entry<Double, List<Movie>> entry : clusters.entrySet()) {
+            System.out.print(" " + entry.getKey());
+        }
+        System.out.println();
+        for (Map.Entry<Double, List<Movie>> entry : clusters.entrySet()) {
+            System.out.println("Cluster with centroid: " + entry.getKey());
+            for (Movie movie : entry.getValue()) {
+                System.out.print(" - " + movie.getIMDB_Rating());
+            }
+            System.out.println();
+        }
 
         // Output outliers
-//        System.out.println("Outliers:");
-//        for (Movie movie : outliers) {
-//            System.out.println(movie.getMovie_Name() + " - " + movie.getIMDB_Rating());
-//        }
+        System.out.println("Outliers:");
+        for (Movie movie : outliers) {
+            System.out.println(movie.getMovie_Name() + " - " + movie.getIMDB_Rating());
+        }
 
-        return Map.of(clusters, outliers);
+        clustersOutliers = Map.of(clusters, outliers);
     }
 
     // main
